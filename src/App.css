@@ -83,6 +83,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
 }
 
 .video-container.landscape-container {
@@ -534,6 +535,11 @@ button,
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.orientation-toggle-btn:not(.fast-forwarding) {
+  pointer-events: auto;
 }
 
 .orientation-toggle-btn:hover {
@@ -623,4 +629,22 @@ button,
   margin-top: 4px;
   font-size: 12px;
   color: var(--brand-accent);
+}
+
+.video-player.fast-forwarding {
+  position: relative;
+}
+
+.video-player.fast-forwarding::after {
+  content: '2x';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  pointer-events: none;
 }

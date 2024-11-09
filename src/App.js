@@ -29,6 +29,9 @@ const VideoCard = ({ videoData, nextVideoData, onVisible, isFirstVideo }) => {
   const [currentPanPosition, setCurrentPanPosition] = useState(50);
   const [panPoints, setPanPoints] = useState([]);
   const panAnimationRef = useRef(null);
+  const [isFastForwarding, setIsFastForwarding] = useState(false);
+  const fastForwardRef = useRef(null);
+  const fastForwardSpeed = 2; // You can adjust this value to change the fast-forward speed
 
   // Convert "M:SS" format to seconds
   const convertTimeToSeconds = (timeStr) => {
@@ -584,9 +587,58 @@ const VideoCard = ({ videoData, nextVideoData, onVisible, isFirstVideo }) => {
     };
   }, [videoData]);
 
+  useEffect(() => {
+    return () => {
+      if (fastForwardRef.current) {
+        clearTimeout(fastForwardRef.current);
+      }
+    };
+  }, []);
+
+  const handleTouchStart = (e) => {
+    // Prevent if touching a button or control
+    if (e.target.closest('button') || e.target.closest('.video-controls')) {
+      return;
+    }
+    
+    e.preventDefault();
+    if (fastForwardRef.current) return;
+    
+    fastForwardRef.current = setTimeout(() => {
+      setIsFastForwarding(true);
+      if (videoRef.current) {
+        videoRef.current.playbackRate = fastForwardSpeed;
+      }
+    }, 200);
+  };
+
+  const handleTouchEnd = () => {
+    if (fastForwardRef.current) {
+      clearTimeout(fastForwardRef.current);
+      fastForwardRef.current = null;
+    }
+    
+    if (isFastForwarding && videoRef.current) {
+      videoRef.current.playbackRate = 1;
+      setIsFastForwarding(false);
+    }
+  };
+
   return (
     <div className="video-card" ref={containerRef}>
-      <div className={`video-container ${isLandscape ? 'landscape-container' : ''}`}>
+      <div 
+        className={`video-container ${isLandscape ? 'landscape-container' : ''}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={(e) => {
+          // Only trigger for left mouse button and not on buttons/controls
+          if (e.button === 0 && !e.target.closest('button') && !e.target.closest('.video-controls')) {
+            handleTouchStart(e);
+          }
+        }}
+        onMouseUp={handleTouchEnd}
+        onMouseLeave={handleTouchEnd}
+      >
         <div className={`video-wrapper ${isLoading ? 'loading' : ''}`}>
           {isLoading && (
             <div className="video-loader">
@@ -604,7 +656,12 @@ const VideoCard = ({ videoData, nextVideoData, onVisible, isFirstVideo }) => {
             onLoadedData={handleVideoLoad}
             onTimeUpdate={handleTimeUpdate}
             onError={handleVideoError}
-            onClick={togglePlay}
+            onClick={(e) => {
+              // Only toggle play if we weren't fast-forwarding
+              if (!isFastForwarding) {
+                togglePlay();
+              }
+            }}
             className={`video-player 
               ${isLandscape ? 'landscape-mode' : 'portrait-mode'}
               ${isTransitioning ? 'transitioning' : ''}

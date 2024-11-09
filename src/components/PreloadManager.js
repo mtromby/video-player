@@ -22,6 +22,8 @@ const PreloadManager = ({ videoUrls, videoData }) => {
         const video = document.createElement('video');
         video.preload = 'auto';
         video.playsInline = true;
+        video.muted = true;
+        video.autoplay = false;
         
         const handleCanPlay = () => {
           try {
@@ -39,6 +41,7 @@ const PreloadManager = ({ videoUrls, videoData }) => {
         };
 
         video.addEventListener('canplay', handleCanPlay, { once: true });
+        
         video.src = url;
         video.load();
 

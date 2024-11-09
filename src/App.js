@@ -5,7 +5,7 @@ import './App.css';
 import PreloadManager from './components/PreloadManager';
 import SearchBar from './components/SearchBar';
 
-const VideoCard = ({ videoData, nextVideoData, onVisible }) => {
+const VideoCard = ({ videoData, nextVideoData, onVisible, isFirstVideo }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -49,6 +49,10 @@ const VideoCard = ({ videoData, nextVideoData, onVisible }) => {
         });
       }
 
+      // Always pause the video initially
+      videoRef.current.pause();
+      setIsPlaying(false);
+
       // Set start time
       if (videoData.fields.start_time) {
         const startTime = convertTimeToSeconds(videoData.fields.start_time);
@@ -61,7 +65,11 @@ const VideoCard = ({ videoData, nextVideoData, onVisible }) => {
       }
 
       setIsLoading(false);
-      attemptPlay();
+
+      // Autoplay first video after loading
+      if (isFirstVideo) {
+        attemptPlay();
+      }
     } catch (error) {
       console.warn('Error in handleVideoLoad:', error);
       setIsLoading(false);
@@ -289,6 +297,11 @@ const VideoCard = ({ videoData, nextVideoData, onVisible }) => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
+          // Reset video position when becoming visible
+          if (videoRef.current && videoData.fields.start_time) {
+            const startTime = convertTimeToSeconds(videoData.fields.start_time);
+            videoRef.current.currentTime = startTime;
+          }
           attemptPlay();
           onVisible();
         } else {
@@ -309,7 +322,7 @@ const VideoCard = ({ videoData, nextVideoData, onVisible }) => {
         clearTimeout(playbackAttemptRef.current);
       }
     };
-  }, [onVisible]);
+  }, [onVisible, videoData?.fields?.start_time]);
 
   const renderTags = () => {
     const tagsToShow = videoData.fields.clip_tags;
@@ -676,6 +689,7 @@ function App() {
   const videosPerPage = 5;
   const loadingRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFirstVideo, setIsFirstVideo] = useState(true);
 
   // Get URLs for preloading (previous, current, and next videos)
   const getPreloadData = (currentIndex) => {
@@ -911,6 +925,7 @@ function App() {
           videoData={video} 
           nextVideoData={videos[index + 1]}
           onVisible={() => setCurrentIndex(index)}
+          isFirstVideo={isFirstVideo && index === 0}
         />
       ))}
       <div ref={loadingRef} className="loading-trigger">

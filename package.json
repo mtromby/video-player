@@ -1,6 +1,7 @@
 {
-  "name": "testing-app",
+  "name": "video-player",
   "version": "0.1.0",
+  "homepage": "https://mtromby.github.io/video-player",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",

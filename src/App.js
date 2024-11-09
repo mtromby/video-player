@@ -560,6 +560,30 @@ const VideoCard = ({ videoData, nextVideoData, onVisible, isFirstVideo }) => {
     };
   }, []);
 
+  // Validate required fields
+  useEffect(() => {
+    if (!videoData?.fields?.link) {
+      console.warn('Video missing required link field:', videoData);
+      setError('Video source unavailable');
+      return;
+    }
+    
+    // Validate other critical fields
+    const requiredFields = {
+      title: videoData.fields.title || 'Untitled',
+      description: videoData.fields.description || '',
+      isFullVideo: typeof videoData.fields.isFullVideo === 'boolean' 
+        ? videoData.fields.isFullVideo 
+        : true
+    };
+    
+    // Update videoData with defaults for missing fields
+    videoData.fields = {
+      ...videoData.fields,
+      ...requiredFields
+    };
+  }, [videoData]);
+
   return (
     <div className="video-card" ref={containerRef}>
       <div className={`video-container ${isLandscape ? 'landscape-container' : ''}`}>
